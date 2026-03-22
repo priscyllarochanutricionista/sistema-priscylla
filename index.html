@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <main id="view-login" class="login-container">
@@ -21,7 +22,7 @@
                 <div class="input-group"><label>Senha</label><input type="password" id="senha" required placeholder="••••••••"></div>
                 <p id="msg-erro-login" class="text-danger hidden">Login ou senha incorretos!</p>
                 <button type="submit" class="btn btn-primary btn-block">Entrar</button>
-                <p style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: #888;">Versão 1.3.0 - Sprint 3 (Agenda e PDF)</p>
+                <p style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: #888;">Versão 1.4.0 - Dashboards e Mês Atual</p>
             </form>
         </section>
     </main>
@@ -54,9 +55,33 @@
                 
                 <div id="tela-dashboard" class="view-section">
                     <section class="kpi-grid">
-                        <article class="kpi-card"><h3>Receita Bruta</h3><p class="text-success value" id="kpi-receita">R$ 0,00</p></article>
-                        <article class="kpi-card"><h3>Despesas</h3><p class="text-danger value" id="kpi-despesa">R$ 0,00</p></article>
-                        <article class="kpi-card kpi-highlight"><h3>Lucro Líquido</h3><p class="text-white value" id="kpi-lucro">R$ 0,00</p></article>
+                        <article class="kpi-card">
+                            <h3>Receita Bruta <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3>
+                            <p class="text-success value" id="kpi-receita">R$ 0,00</p>
+                        </article>
+                        <article class="kpi-card">
+                            <h3>Despesas <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3>
+                            <p class="text-danger value" id="kpi-despesa">R$ 0,00</p>
+                        </article>
+                        <article class="kpi-card kpi-highlight">
+                            <h3>Lucro Líquido <span style="font-size:0.7rem; opacity: 0.8;">(Mês Atual)</span></h3>
+                            <p class="text-white value" id="kpi-lucro">R$ 0,00</p>
+                        </article>
+                    </section>
+                    
+                    <section class="charts-grid" style="display: flex; gap: 1.5rem; margin-top: 2rem; flex-wrap: wrap;">
+                        <div class="panel" style="flex: 2; min-width: 300px;">
+                            <header class="panel-header"><h3>Balanço do Mês (Receitas x Despesas)</h3></header>
+                            <div class="panel-body" style="height: 280px; position: relative;">
+                                <canvas id="graficoBalanco"></canvas>
+                            </div>
+                        </div>
+                        <div class="panel" style="flex: 1; min-width: 300px;">
+                            <header class="panel-header"><h3>Despesas por Categoria (Mês Atual)</h3></header>
+                            <div class="panel-body" style="height: 280px; position: relative;">
+                                <canvas id="graficoCategorias"></canvas>
+                            </div>
+                        </div>
                     </section>
                 </div>
 
@@ -67,109 +92,50 @@
                             <form id="form-agenda">
                                 <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
                                     <div class="input-group" style="flex: 1;"><label>Data e Hora</label><input type="datetime-local" id="data-agenda" required></div>
-                                    <div class="input-group" style="flex: 2;"><label>Nome do Paciente</label><input type="text" id="paciente-agenda" required placeholder="Ex: João da Silva"></div>
-                                    <div class="input-group" style="flex: 1;">
-                                        <label>Tipo de Consulta</label>
-                                        <select id="tipo-agenda" class="form-select" required>
-                                            <option value="1ª Consulta">1ª Consulta</option>
-                                            <option value="Retorno">Retorno</option>
-                                        </select>
-                                    </div>
+                                    <div class="input-group" style="flex: 2;"><label>Nome do Paciente</label><input type="text" id="paciente-agenda" required></div>
+                                    <div class="input-group" style="flex: 1;"><label>Tipo</label><select id="tipo-agenda" class="form-select" required><option value="1ª Consulta">1ª Consulta</option><option value="Retorno">Retorno</option></select></div>
                                 </div>
-                                <div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-calendar-plus"></i> Confirmar Agendamento</button></div>
+                                <div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-calendar-plus"></i> Agendar</button></div>
                             </form>
                         </div>
                     </section>
-                    <section class="panel" style="margin-top: 2rem;">
-                        <header class="panel-header"><h3>Próximas Consultas</h3></header>
-                        <div class="table-responsive"><table class="data-table"><thead><tr><th>Data/Hora</th><th>Paciente</th><th>Tipo</th><th>Status</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-agenda"></tbody></table></div>
-                    </section>
+                    <section class="panel" style="margin-top: 2rem;"><header class="panel-header"><h3>Próximas Consultas</h3></header><div class="table-responsive"><table class="data-table"><thead><tr><th>Data/Hora</th><th>Paciente</th><th>Tipo</th><th>Status</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-agenda"></tbody></table></div></section>
                 </div>
 
                 <div id="tela-receitas" class="view-section hidden">
                     <section class="panel">
                         <header class="panel-header"><h3>Registrar Nova Receita</h3></header>
                         <div class="panel-body">
-                            <form id="form-receita">
-                                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-                                    <div class="input-group" style="flex: 1;"><label>Valor (R$)</label><input type="number" id="valor-receita" required step="0.01"></div>
-                                    <div class="input-group" style="flex: 1;"><label>Data</label><input type="date" id="data-receita" required></div>
-                                    <div class="input-group" style="flex: 2;"><label>Descrição / Paciente</label><input type="text" id="desc-receita" required></div>
-                                </div>
-                                <div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar</button></div>
-                            </form>
+                            <form id="form-receita"><div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;"><div class="input-group" style="flex: 1;"><label>Valor (R$)</label><input type="number" id="valor-receita" required step="0.01"></div><div class="input-group" style="flex: 1;"><label>Data</label><input type="date" id="data-receita" required></div><div class="input-group" style="flex: 2;"><label>Descrição / Paciente</label><input type="text" id="desc-receita" required></div></div><div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar</button></div></form>
                         </div>
                     </section>
-                    <section class="panel" style="margin-top: 2rem;">
-                        <header class="panel-header"><h3>Últimas 10 Receitas</h3></header>
-                        <div class="table-responsive"><table class="data-table"><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-receitas"></tbody></table></div>
-                    </section>
+                    <section class="panel" style="margin-top: 2rem;"><header class="panel-header"><h3>Últimas 10 Receitas</h3></header><div class="table-responsive"><table class="data-table"><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-receitas"></tbody></table></div></section>
                 </div>
 
                 <div id="tela-despesas" class="view-section hidden">
                     <section class="panel">
                         <header class="panel-header"><h3>Registrar Nova Despesa</h3></header>
                         <div class="panel-body">
-                            <form id="form-despesa">
-                                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-                                    <div class="input-group" style="flex: 1;"><label>Valor (R$)</label><input type="number" id="valor-despesa" required step="0.01"></div>
-                                    <div class="input-group" style="flex: 1;"><label>Data</label><input type="date" id="data-despesa" required></div>
-                                    <div class="input-group" style="flex: 1;"><label>Categoria</label><select id="cat-despesa" class="form-select"></select></div>
-                                </div>
-                                <div class="input-group" style="margin-bottom: 1.5rem;"><label>Descrição</label><input type="text" id="desc-despesa" required></div>
-                                <div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-danger"><i class="ph ph-floppy-disk"></i> Salvar Despesa</button></div>
-                            </form>
+                            <form id="form-despesa"><div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;"><div class="input-group" style="flex: 1;"><label>Valor (R$)</label><input type="number" id="valor-despesa" required step="0.01"></div><div class="input-group" style="flex: 1;"><label>Data</label><input type="date" id="data-despesa" required></div><div class="input-group" style="flex: 1;"><label>Categoria</label><select id="cat-despesa" class="form-select"></select></div></div><div class="input-group" style="margin-bottom: 1.5rem;"><label>Descrição</label><input type="text" id="desc-despesa" required></div><div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-danger"><i class="ph ph-floppy-disk"></i> Salvar Despesa</button></div></form>
                         </div>
                     </section>
-                    <section class="panel" style="margin-top: 2rem;">
-                        <header class="panel-header"><h3>Últimas 10 Despesas</h3></header>
-                        <div class="table-responsive"><table class="data-table"><thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th>Valor</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-despesas"></tbody></table></div>
-                    </section>
+                    <section class="panel" style="margin-top: 2rem;"><header class="panel-header"><h3>Últimas 10 Despesas</h3></header><div class="table-responsive"><table class="data-table"><thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th>Valor</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-despesas"></tbody></table></div></section>
                 </div>
 
                 <div id="tela-pacientes" class="view-section hidden">
                     <section class="panel">
                         <header class="panel-header"><h3>Cadastrar Paciente</h3></header>
-                        <div class="panel-body">
-                            <form id="form-paciente">
-                                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-                                    <div class="input-group" style="flex: 2;"><label>Nome Completo</label><input type="text" id="nome-paciente" required></div>
-                                    <div class="input-group" style="flex: 1;"><label>WhatsApp</label><input type="text" id="tel-paciente" required></div>
-                                    <div class="input-group" style="flex: 1;"><label>E-mail (Opcional)</label><input type="email" id="email-paciente"></div>
-                                </div>
-                                <div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-user-plus"></i> Salvar Paciente</button></div>
-                            </form>
-                        </div>
+                        <div class="panel-body"><form id="form-paciente"><div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;"><div class="input-group" style="flex: 2;"><label>Nome Completo</label><input type="text" id="nome-paciente" required></div><div class="input-group" style="flex: 1;"><label>WhatsApp</label><input type="text" id="tel-paciente" required></div><div class="input-group" style="flex: 1;"><label>E-mail (Opcional)</label><input type="email" id="email-paciente"></div></div><div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-user-plus"></i> Salvar Paciente</button></div></form></div>
                     </section>
-                    <section class="panel" style="margin-top: 2rem;">
-                        <header class="panel-header"><h3>Carteira de Pacientes</h3></header>
-                        <div class="table-responsive"><table class="data-table"><thead><tr><th>Data Cad.</th><th>Nome</th><th>Telefone</th><th>E-mail</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-pacientes"></tbody></table></div>
-                    </section>
+                    <section class="panel" style="margin-top: 2rem;"><header class="panel-header"><h3>Carteira de Pacientes</h3></header><div class="table-responsive"><table class="data-table"><thead><tr><th>Data Cad.</th><th>Nome</th><th>Telefone</th><th>E-mail</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-pacientes"></tbody></table></div></section>
                 </div>
 
                 <div id="tela-categorias" class="view-section hidden">
                     <section class="panel">
                         <header class="panel-header"><h3>Criar Nova Categoria</h3></header>
-                        <div class="panel-body">
-                            <form id="form-categoria">
-                                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-                                    <div class="input-group" style="flex: 2;"><label>Nome da Categoria</label><input type="text" id="nome-categoria" required></div>
-                                    <div class="input-group" style="flex: 1;">
-                                        <label>Natureza</label>
-                                        <select id="nat-categoria" class="form-select" required>
-                                            <option value="Despesa">Despesa (Saída)</option>
-                                            <option value="Receita">Receita (Entrada)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-tag"></i> Salvar Categoria</button></div>
-                            </form>
-                        </div>
+                        <div class="panel-body"><form id="form-categoria"><div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;"><div class="input-group" style="flex: 2;"><label>Nome da Categoria</label><input type="text" id="nome-categoria" required></div><div class="input-group" style="flex: 1;"><label>Natureza</label><select id="nat-categoria" class="form-select" required><option value="Despesa">Despesa (Saída)</option><option value="Receita">Receita (Entrada)</option></select></div></div><div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-tag"></i> Salvar Categoria</button></div></form></div>
                     </section>
-                    <section class="panel" style="margin-top: 2rem;">
-                        <header class="panel-header"><h3>Categorias Cadastradas</h3></header>
-                        <div class="table-responsive"><table class="data-table"><thead><tr><th>Nome</th><th>Natureza</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-categorias"></tbody></table></div>
-                    </section>
+                    <section class="panel" style="margin-top: 2rem;"><header class="panel-header"><h3>Categorias Cadastradas</h3></header><div class="table-responsive"><table class="data-table"><thead><tr><th>Nome</th><th>Natureza</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-categorias"></tbody></table></div></section>
                 </div>
 
                 <div id="tela-relatorios" class="view-section hidden">
@@ -177,33 +143,18 @@
                         <header class="panel-header"><h3>Filtro de Período Financeiro</h3></header>
                         <div class="panel-body">
                             <form id="form-filtro-relatorio" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                                <div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
-                                    <label>Data Inicial (De):</label><input type="date" id="filtro-inicio" required>
-                                </div>
-                                <div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
-                                    <label>Data Final (Até):</label><input type="date" id="filtro-fim" required>
-                                </div>
-                                <div class="input-group" style="flex: 0 1 auto; justify-content: flex-end; align-items: flex-end; margin-bottom: 0;">
-                                    <button type="submit" class="btn btn-primary"><i class="ph ph-funnel"></i> Gerar Relatório</button>
-                                </div>
+                                <div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;"><label>Data Inicial (De):</label><input type="date" id="filtro-inicio" required></div>
+                                <div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;"><label>Data Final (Até):</label><input type="date" id="filtro-fim" required></div>
+                                <div class="input-group" style="flex: 0 1 auto; justify-content: flex-end; align-items: flex-end; margin-bottom: 0;"><button type="submit" class="btn btn-primary"><i class="ph ph-funnel"></i> Gerar Relatório</button></div>
                             </form>
                         </div>
                     </section>
                     <section class="panel" style="margin-top: 2rem;">
                         <header class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
                             <h3 id="titulo-resultados-relatorio">Resultados do Período</h3>
-                            <button id="btn-gerar-pdf" class="btn btn-secondary" style="display: none; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                                <i class="ph ph-file-pdf" style="margin-right: 0.4rem; color: #dc2626;"></i> Baixar PDF
-                            </button>
+                            <button id="btn-gerar-pdf" class="btn btn-secondary" style="display: none; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><i class="ph ph-file-pdf" style="margin-right: 0.4rem; color: #dc2626;"></i> Baixar PDF</button>
                         </header>
-                        <div class="table-responsive">
-                            <table class="data-table" id="tabela-relatorio-pdf">
-                                <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr></thead>
-                                <tbody id="tbody-relatorio">
-                                    <tr><td colspan="4" class="text-center text-muted">Defina um período e clique em Gerar Relatório.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <div class="table-responsive"><table class="data-table" id="tabela-relatorio-pdf"><thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr></thead><tbody id="tbody-relatorio"><tr><td colspan="4" class="text-center text-muted">Defina um período e clique em Gerar Relatório.</td></tr></tbody></table></div>
                     </section>
                 </div>
             </div>
