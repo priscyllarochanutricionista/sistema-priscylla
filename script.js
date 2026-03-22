@@ -228,24 +228,37 @@ async function carregarPacientes() {
     renderizarTabela('tbody-pacientes', pacs.reverse(), p => `<td>${formatarData(p.Data_Cadastro)}</td><td><strong>${p.Nome_Completo}</strong></td><td>${p.Telefone}</td><td>${p.Email}</td><td class="text-center">${botoesAcao('Pacientes', p.ID)}</td>`);
 }
 
-// AGENDA COM INTELIGÊNCIA DE KPIs E AUTOMAÇÃO
+// AGENDA COM INTELIGÊNCIA DE KPIs MENSAL E AUTOMAÇÃO
 async function carregarAgenda() {
     const agenda = await buscarDados('Agenda');
     
-    // Atualização dos KPIs
-    let prim = 0, ret = 0, real = 0;
+    // Captura o "Ano-Mês" atual (Ex: "2026-03")
+    const hoje = new Date();
+    const anoMesAtual = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
+
+    // Atualização dos KPIs (Apenas para o mês atual)
+    let totalMes = 0, prim = 0, ret = 0, real = 0;
+    
     agenda.forEach(a => {
-        if(a.Tipo_Consulta === '1ª Consulta') prim++;
-        if(a.Tipo_Consulta === 'Retorno') ret++;
-        if(a.Status_Presenca === 'Realizado') real++;
+        const dataAg = String(a.Data_Hora).split('T')[0]; // Pega só a data YYYY-MM-DD
+        
+        if (dataAg.startsWith(anoMesAtual)) {
+            totalMes++;
+            if(a.Tipo_Consulta === '1ª Consulta') prim++;
+            if(a.Tipo_Consulta === 'Retorno') ret++;
+            if(a.Status_Presenca === 'Realizado') real++;
+        }
     });
+
     const kpiTot = document.getElementById('kpi-agenda-total');
     if(kpiTot) {
-        kpiTot.textContent = agenda.length;
-        document.getElementById('kpi-agenda-tipos').textContent = `${prim} / ${ret}`;
+        kpiTot.textContent = totalMes;
+        document.getElementById('kpi-agenda-prim').textContent = prim;
+        document.getElementById('kpi-agenda-ret').textContent = ret;
         document.getElementById('kpi-agenda-realizados').textContent = real;
     }
 
+    // A tabela continua mostrando todos (ou os últimos) para manter o histórico visual
     renderizarTabela('tbody-agenda', agenda.reverse(), a => {
         let corStatus = a.Status_Presenca === 'Realizado' ? 'success' : 'warning';
         // Botão mágico de Finalizar (Apenas se não estiver realizado)
@@ -258,19 +271,6 @@ async function carregarAgenda() {
         <td><span class="text-${corStatus}"><i class="ph ph-${a.Status_Presenca === 'Realizado' ? 'check' : 'clock'}"></i> ${a.Status_Presenca}</span></td>
         <td class="text-center">${btnFinalizar}${botoesAcao('Agenda', a.ID)}</td>
     `});
-}
-
-function renderizarTabela(id, dados, templateTr) {
-    const tbody = document.getElementById(id); if(!tbody) return;
-    if(dados.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Nenhum registro.</td></tr>`; return; }
-    tbody.innerHTML = ''; dados.forEach(d => { const tr = document.createElement('tr'); tr.innerHTML = templateTr(d); tbody.appendChild(tr); });
-}
-
-function botoesAcao(tabela, id) {
-    return `
-        <button onclick="abrirModalEditar('${tabela}', '${id}')" class="btn-icon" style="color: var(--color-primary); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;" title="Editar"><i class="ph ph-pencil-simple"></i></button>
-        <button onclick="excluirRegistro('${tabela}', '${id}')" class="btn-icon" style="color: var(--color-danger); background: none; border: none; font-size: 1.1rem; cursor: pointer;" title="Excluir"><i class="ph ph-trash"></i></button>
-    `;
 }
 
 // ==========================================
