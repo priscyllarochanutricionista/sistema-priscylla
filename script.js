@@ -228,25 +228,31 @@ async function carregarPacientes() {
     renderizarTabela('tbody-pacientes', pacs.reverse(), p => `<td>${formatarData(p.Data_Cadastro)}</td><td><strong>${p.Nome_Completo}</strong></td><td>${p.Telefone}</td><td>${p.Email}</td><td class="text-center">${botoesAcao('Pacientes', p.ID)}</td>`);
 }
 
-// AGENDA COM INTELIGÊNCIA DE KPIs MENSAL E AUTOMAÇÃO
+// AGENDA BLINDADA COM FILTROS DE SEGURANÇA E AUTOMAÇÃO
 async function carregarAgenda() {
-    const agenda = await buscarDados('Agenda');
+    const agendaFull = await buscarDados('Agenda');
     
-    // Captura o "Ano-Mês" atual (Ex: "2026-03")
+    // 1. FILTRO ANTI-FANTASMA: Remove linhas vazias ou corrompidas do Google Sheets
+    const agenda = agendaFull.filter(a => a.Nome_Paciente && String(a.Nome_Paciente).trim() !== '');
+
     const hoje = new Date();
     const anoMesAtual = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
 
-    // Atualização dos KPIs (Apenas para o mês atual)
     let totalMes = 0, prim = 0, ret = 0, real = 0;
     
     agenda.forEach(a => {
-        const dataAg = String(a.Data_Hora).split('T')[0]; // Pega só a data YYYY-MM-DD
+        const dataAg = String(a.Data_Hora || '').split('T')[0]; 
+        
+        // 2. NORMALIZAÇÃO: Transforma tudo em minúsculo e tira espaços para o sistema não se confundir
+        const tipo = String(a.Tipo_Consulta || '').trim().toLowerCase();
+        const status = String(a.Status_Presenca || '').trim().toLowerCase();
         
         if (dataAg.startsWith(anoMesAtual)) {
             totalMes++;
-            if(a.Tipo_Consulta === '1ª Consulta') prim++;
-            if(a.Tipo_Consulta === 'Retorno') ret++;
-            if(a.Status_Presenca === 'Realizado') real++;
+            // Usa 'includes' para garantir que vai contar mesmo se tiver caracteres invisíveis
+            if(tipo.includes('1ª') || tipo.includes('1a') || tipo.includes('primeira')) prim++;
+            if(tipo.includes('retorno')) ret++;
+            if(status.includes('realizado')) real++;
         }
     });
 
@@ -258,21 +264,25 @@ async function carregarAgenda() {
         document.getElementById('kpi-agenda-realizados').textContent = real;
     }
 
-    // A tabela continua mostrando todos (ou os últimos) para manter o histórico visual
     renderizarTabela('tbody-agenda', agenda.reverse(), a => {
-        let corStatus = a.Status_Presenca === 'Realizado' ? 'success' : 'warning';
-        // Botão mágico de Finalizar (Apenas se não estiver realizado)
-        let btnFinalizar = a.Status_Presenca !== 'Realizado' ? `<button onclick="finalizarConsulta('${a.ID}', '${a.Nome_Paciente}')" class="btn-icon" style="color: var(--color-success); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;" title="Finalizar e Gerar Receita"><i class="ph ph-check-circle"></i></button>` : '';
+        // Formatação limpa para a Tabela
+        const tipoOriginal = String(a.Tipo_Consulta || 'Indefinido').trim();
+        const statusOriginal = String(a.Status_Presenca || 'Aguardando').trim();
+        const statusL = statusOriginal.toLowerCase();
+        
+        let corStatus = statusL.includes('realizado') ? 'success' : 'warning';
+        let iconeStatus = statusL.includes('realizado') ? 'check' : 'clock';
+        
+        let btnFinalizar = !statusL.includes('realizado') ? `<button onclick="finalizarConsulta('${a.ID}', '${a.Nome_Paciente}')" class="btn-icon" style="color: var(--color-success); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;" title="Finalizar e Gerar Receita"><i class="ph ph-check-circle"></i></button>` : '';
 
         return `
         <td><strong>${formatarDataHora(a.Data_Hora)}</strong></td>
         <td>${a.Nome_Paciente}</td>
-        <td><span class="badge" style="background:#e0f2fe; color:#0284c7;">${a.Tipo_Consulta}</span></td>
-        <td><span class="text-${corStatus}"><i class="ph ph-${a.Status_Presenca === 'Realizado' ? 'check' : 'clock'}"></i> ${a.Status_Presenca}</span></td>
+        <td><span class="badge" style="background:#e0f2fe; color:#0284c7;">${tipoOriginal}</span></td>
+        <td><span class="text-${corStatus}"><i class="ph ph-${iconeStatus}"></i> ${statusOriginal}</span></td>
         <td class="text-center">${btnFinalizar}${botoesAcao('Agenda', a.ID)}</td>
     `});
 }
-
 // ==========================================
 // AÇÕES PRO (EXCLUIR, EDITAR MODAL, FINALIZAR CONSULTA)
 // ==========================================
