@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. LOGIN
+    // ==========================================
+    // 1. SISTEMA DE LOGIN E ROTEADOR
+    // ==========================================
     const formLogin = document.getElementById('form-login');
     const viewLogin = document.getElementById('view-login');
     const viewApp = document.getElementById('view-app');
@@ -10,7 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault(); 
             if (document.getElementById('login').value === 'admin' && document.getElementById('senha').value === 'admin') {
                 msgErroLogin.classList.add('hidden'); viewLogin.classList.add('hidden'); viewApp.classList.remove('hidden');
-                carregarPainelFinanceiro(); carregarCategorias(); carregarPacientes(); carregarAgenda();
+                // Inicializa o sistema
+                carregarPainelFinanceiro(); 
+                carregarCategorias(); 
+                carregarPacientes(); 
+                carregarAgenda();
             } else { msgErroLogin.classList.remove('hidden'); }
         });
     }
@@ -19,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
         viewApp.classList.add('hidden'); viewLogin.classList.remove('hidden'); formLogin.reset();
     });
 
-    // 2. ROTEADOR DE TELAS
     const telas = {
         'dashboard': document.getElementById('tela-dashboard'), 'agenda': document.getElementById('tela-agenda'),
         'receitas': document.getElementById('tela-receitas'), 'despesas': document.getElementById('tela-despesas'),
@@ -42,7 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 3. SALVAR (FORMULÁRIOS)
+    // ==========================================
+    // 2. SALVAR DADOS (FORMULÁRIOS)
+    // ==========================================
     function configurarFormulario(idForm, tabela, preparadorDeDados, callbackSucesso) {
         const form = document.getElementById(idForm);
         if (!form) return;
@@ -82,7 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('data-agenda').value, document.getElementById('paciente-agenda').value, document.getElementById('tipo-agenda').value, 'Aguardando', 'Pendente', ''
     ], carregarAgenda);
 
-    // 4. MÓDULO DE RELATÓRIOS E PDF (Mantido intacto)
+    // ==========================================
+    // 3. MÓDULO DE RELATÓRIOS E PDF
+    // ==========================================
     const formFiltro = document.getElementById('form-filtro-relatorio');
     if(formFiltro) {
         formFiltro.addEventListener('submit', async (e) => {
@@ -120,7 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
         doc.save(`Relatorio_Financeiro.pdf`);
     });
 
-    // 5. EVENTO DE SUBMIT DO MODAL DE EDIÇÃO
+    // ==========================================
+    // 4. EVENTO DE SUBMIT DO MODAL DE EDIÇÃO
+    // ==========================================
     document.getElementById('form-editar').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button[type="submit"]');
@@ -152,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
 }); // Fim DOMContentLoaded
 
 // ==========================================
-// FUNÇÕES DE INTELIGÊNCIA PRO
+// FUNÇÕES DE INTELIGÊNCIA E API
 // ==========================================
 const API_URL = 'https://script.google.com/macros/s/AKfycbzmrx8ds2GZLGjOoFz-VKdjMEPXHagDsYwRPuxX_YIp4KpoQvnNOl6PIsQGFba77SIJng/exec';
 let graficoB = null; let graficoC = null;
@@ -170,23 +181,26 @@ window.showToast = function(mensagem, tipo = 'sucesso') {
     setTimeout(() => { toast.style.animation = 'fadeOut 0.5s forwards'; setTimeout(() => toast.remove(), 500); }, 3000);
 }
 
-// Utilitários de Formatação
+// Utilitários de Formatação Blindados
 function formatarMoeda(valor) { return (parseFloat(valor) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
 function formatarData(valor) {
-    if (!valor) return '-'; const d = String(valor).split('T')[0].split('-');
-    if (d.length >= 3) { let ano = d[d.length-3].replace('+',''); if(ano.length>4) ano=ano.substring(ano.length-4); return `${d[d.length-1]}/${d[d.length-2]}/${ano}`; }
-    return valor;
+    if (!valor) return '-'; 
+    try {
+        const d = String(valor).split('T')[0].split('-');
+        if (d.length >= 3) { let ano = d[d.length-3].replace('+',''); if(ano.length>4) ano=ano.substring(ano.length-4); return `${d[d.length-1]}/${d[d.length-2]}/${ano}`; }
+        return valor;
+    } catch(e) { return valor; }
 }
+
 function formatarDataHora(valorISO) {
     if(!valorISO) return '-'; 
     try { 
         const valStr = String(valorISO);
-        const [d, h] = valStr.split('T'); 
-        if(!h) return formatarData(d); 
-        return `${formatarData(d)} às ${h.substring(0,5)}`; 
-    } catch(e) { 
-        return valorISO; 
-    }
+        const partes = valStr.split('T'); 
+        if(partes.length === 1) return formatarData(partes[0]); 
+        return `${formatarData(partes[0])} às ${partes[1].substring(0,5)}`; 
+    } catch(e) { return valorISO; }
 }
 
 async function buscarDados(tabela) { try { const r = await fetch(`${API_URL}?tabela=${tabela}`); const j = await r.json(); return j.dados || []; } catch(e) { return []; } }
@@ -236,61 +250,85 @@ async function carregarPacientes() {
     renderizarTabela('tbody-pacientes', pacs.reverse(), p => `<td>${formatarData(p.Data_Cadastro)}</td><td><strong>${p.Nome_Completo}</strong></td><td>${p.Telefone}</td><td>${p.Email}</td><td class="text-center">${botoesAcao('Pacientes', p.ID)}</td>`);
 }
 
-// AGENDA BLINDADA COM FILTROS DE SEGURANÇA E AUTOMAÇÃO
+// ==========================================
+// AGENDA COM INTELIGÊNCIA BLINDADA
+// ==========================================
 async function carregarAgenda() {
-    const agendaFull = await buscarDados('Agenda');
-    
-    // 1. FILTRO ANTI-FANTASMA: Remove linhas vazias ou corrompidas do Google Sheets
-    const agenda = agendaFull.filter(a => a.Nome_Paciente && String(a.Nome_Paciente).trim() !== '');
-
-    const hoje = new Date();
-    const anoMesAtual = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
-
-    let totalMes = 0, prim = 0, ret = 0, real = 0;
-    
-    agenda.forEach(a => {
-        const dataAg = String(a.Data_Hora || '').split('T')[0]; 
+    try {
+        const agendaFull = await buscarDados('Agenda');
         
-        // 2. NORMALIZAÇÃO: Transforma tudo em minúsculo e tira espaços para o sistema não se confundir
-        const tipo = String(a.Tipo_Consulta || '').trim().toLowerCase();
-        const status = String(a.Status_Presenca || '').trim().toLowerCase();
+        // 1. Filtro Anti-Fantasma (Remove linhas vazias do Google Sheets)
+        const agenda = agendaFull.filter(a => {
+            const nome = a.Nome_Paciente || a.Paciente || '';
+            return String(nome).trim() !== '';
+        });
+
+        const hoje = new Date();
+        const anoMesAtual = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
+
+        let totalMes = 0, prim = 0, ret = 0, real = 0;
         
-        if (dataAg.startsWith(anoMesAtual)) {
-            totalMes++;
-            // Usa 'includes' para garantir que vai contar mesmo se tiver caracteres invisíveis
-            if(tipo.includes('1ª') || tipo.includes('1a') || tipo.includes('primeira')) prim++;
-            if(tipo.includes('retorno')) ret++;
-            if(status.includes('realizado')) real++;
+        agenda.forEach(a => {
+            const dataAg = String(a.Data_Hora || '').split('T')[0]; 
+            const tipo = String(a.Tipo_Consulta || '').trim().toLowerCase();
+            const status = String(a.Status_Presenca || '').trim().toLowerCase();
+            
+            // KPIs limitados ao mês atual
+            if (dataAg.startsWith(anoMesAtual)) {
+                totalMes++;
+                if(tipo.includes('1ª') || tipo.includes('1a') || tipo.includes('primeira')) prim++;
+                if(tipo.includes('retorno')) ret++;
+                if(status.includes('realizado')) real++;
+            }
+        });
+
+        const kpiTot = document.getElementById('kpi-agenda-total');
+        if(kpiTot) {
+            kpiTot.textContent = totalMes;
+            document.getElementById('kpi-agenda-prim').textContent = prim;
+            document.getElementById('kpi-agenda-ret').textContent = ret;
+            document.getElementById('kpi-agenda-realizados').textContent = real;
         }
-    });
 
-    const kpiTot = document.getElementById('kpi-agenda-total');
-    if(kpiTot) {
-        kpiTot.textContent = totalMes;
-        document.getElementById('kpi-agenda-prim').textContent = prim;
-        document.getElementById('kpi-agenda-ret').textContent = ret;
-        document.getElementById('kpi-agenda-realizados').textContent = real;
+        renderizarTabela('tbody-agenda', agenda.reverse(), a => {
+            const tipoOriginal = String(a.Tipo_Consulta || 'Indefinido').trim();
+            const statusOriginal = String(a.Status_Presenca || 'Aguardando').trim();
+            const statusL = statusOriginal.toLowerCase();
+            const nomePac = String(a.Nome_Paciente || a.Paciente || 'Sem Nome').trim();
+            
+            let corStatus = statusL.includes('realizado') ? 'success' : 'warning';
+            let iconeStatus = statusL.includes('realizado') ? 'check' : 'clock';
+            
+            let btnFinalizar = !statusL.includes('realizado') ? `<button onclick="finalizarConsulta('${a.ID}', '${nomePac}')" class="btn-icon" style="color: var(--color-success); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;" title="Finalizar e Gerar Receita"><i class="ph ph-check-circle"></i></button>` : '';
+
+            return `
+            <td><strong>${formatarDataHora(a.Data_Hora)}</strong></td>
+            <td>${nomePac}</td>
+            <td><span class="badge" style="background:#e0f2fe; color:#0284c7;">${tipoOriginal}</span></td>
+            <td><span class="text-${corStatus}"><i class="ph ph-${iconeStatus}"></i> ${statusOriginal}</span></td>
+            <td class="text-center">${btnFinalizar}${botoesAcao('Agenda', a.ID)}</td>
+        `});
+
+    } catch(e) {
+        console.error("Erro na Agenda:", e);
+        const tbody = document.getElementById('tbody-agenda');
+        if(tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Erro ao processar dados.</td></tr>`;
     }
-
-    renderizarTabela('tbody-agenda', agenda.reverse(), a => {
-        // Formatação limpa para a Tabela
-        const tipoOriginal = String(a.Tipo_Consulta || 'Indefinido').trim();
-        const statusOriginal = String(a.Status_Presenca || 'Aguardando').trim();
-        const statusL = statusOriginal.toLowerCase();
-        
-        let corStatus = statusL.includes('realizado') ? 'success' : 'warning';
-        let iconeStatus = statusL.includes('realizado') ? 'check' : 'clock';
-        
-        let btnFinalizar = !statusL.includes('realizado') ? `<button onclick="finalizarConsulta('${a.ID}', '${a.Nome_Paciente}')" class="btn-icon" style="color: var(--color-success); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;" title="Finalizar e Gerar Receita"><i class="ph ph-check-circle"></i></button>` : '';
-
-        return `
-        <td><strong>${formatarDataHora(a.Data_Hora)}</strong></td>
-        <td>${a.Nome_Paciente}</td>
-        <td><span class="badge" style="background:#e0f2fe; color:#0284c7;">${tipoOriginal}</span></td>
-        <td><span class="text-${corStatus}"><i class="ph ph-${iconeStatus}"></i> ${statusOriginal}</span></td>
-        <td class="text-center">${btnFinalizar}${botoesAcao('Agenda', a.ID)}</td>
-    `});
 }
+
+function renderizarTabela(id, dados, templateTr) {
+    const tbody = document.getElementById(id); if(!tbody) return;
+    if(dados.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Nenhum registro encontrado.</td></tr>`; return; }
+    tbody.innerHTML = ''; dados.forEach(d => { const tr = document.createElement('tr'); tr.innerHTML = templateTr(d); tbody.appendChild(tr); });
+}
+
+function botoesAcao(tabela, id) {
+    return `
+        <button onclick="abrirModalEditar('${tabela}', '${id}')" class="btn-icon" style="color: var(--color-primary); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;" title="Editar"><i class="ph ph-pencil-simple"></i></button>
+        <button onclick="excluirRegistro('${tabela}', '${id}')" class="btn-icon" style="color: var(--color-danger); background: none; border: none; font-size: 1.1rem; cursor: pointer;" title="Excluir"><i class="ph ph-trash"></i></button>
+    `;
+}
+
 // ==========================================
 // AÇÕES PRO (EXCLUIR, EDITAR MODAL, FINALIZAR CONSULTA)
 // ==========================================
@@ -306,7 +344,6 @@ window.excluirRegistro = async function(tabela, id) {
     } else showToast('Erro: ' + res.mensagem, 'erro');
 }
 
-// O NOVO MODAL INTELIGENTE (Edita qualquer tabela)
 window.abrirModalEditar = async function(tabela, id) {
     tabelaEditandoGlobal = tabela; idEditandoGlobal = id;
     const dados = await buscarDados(tabela);
@@ -329,22 +366,19 @@ window.abrirModalEditar = async function(tabela, id) {
 
 window.fecharModal = function() { document.getElementById('modal-editar').classList.add('hidden'); }
 
-// A AUTOMAÇÃO: AGENDA -> FINANCEIRO
 window.finalizarConsulta = async function(idAgenda, paciente) {
     const valorStr = prompt(`Finalizando consulta de ${paciente}.\nQual o valor recebido? (Use ponto. Ex: 250.00)\nDeixe 0 se for retorno gratuito.`, "0.00");
-    if (valorStr === null) return; // Clicou em cancelar
+    if (valorStr === null) return; 
     
     const valor = parseFloat(valorStr) || 0;
     showToast('Finalizando e integrando com o financeiro...', 'info');
 
-    // 1. Atualiza a Agenda (Muda para Realizado)
     const agendaFull = await buscarDados('Agenda');
     const a = agendaFull.find(x => x.ID === idAgenda);
     if (a) {
         await enviarParaBanco('alterar', 'Agenda', [a.Data_Hora, a.Nome_Paciente, a.Tipo_Consulta, 'Realizado', 'Pago', a.Observacoes], idAgenda);
     }
 
-    // 2. Se tiver valor, gera o Lancamento Automático
     if (valor > 0) {
         const hoje = new Date().toISOString().split('T')[0];
         await enviarParaBanco('salvar', 'Lancamentos', [hoje, 'Receita', `Consulta: ${paciente}`, 'Consulta', valor, 'Pago']);
