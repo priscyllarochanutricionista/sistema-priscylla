@@ -60,10 +60,23 @@
                 </div>
 
                 <div id="tela-agenda" class="view-section hidden">
-                    <section class="kpi-grid" style="margin-bottom: 2rem;">
-                        <article class="kpi-card" style="border-top: 3px solid var(--color-primary);"><h3>Total Agendado</h3><p class="value" id="kpi-agenda-total">0</p></article>
-                        <article class="kpi-card" style="border-top: 3px solid #0ea5e9;"><h3>1ª Consulta / Retorno</h3><p class="value" style="color: #0ea5e9;" id="kpi-agenda-tipos">0 / 0</p></article>
-                        <article class="kpi-card" style="border-top: 3px solid var(--color-success);"><h3>Realizados (Sucesso)</h3><p class="value text-success" id="kpi-agenda-realizados">0</p></article>
+                    <section class="kpi-grid" style="margin-bottom: 2rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                        <article class="kpi-card" style="border-top: 3px solid var(--color-primary);">
+                            <h3>Total Agendado <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3>
+                            <p class="value" id="kpi-agenda-total">0</p>
+                        </article>
+                        <article class="kpi-card" style="border-top: 3px solid #0ea5e9;">
+                            <h3>1ª Consulta <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3>
+                            <p class="value" style="color: #0ea5e9;" id="kpi-agenda-prim">0</p>
+                        </article>
+                        <article class="kpi-card" style="border-top: 3px solid #f59e0b;">
+                            <h3>Retornos <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3>
+                            <p class="value" style="color: #f59e0b;" id="kpi-agenda-ret">0</p>
+                        </article>
+                        <article class="kpi-card" style="border-top: 3px solid var(--color-success);">
+                            <h3>Realizados <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3>
+                            <p class="value text-success" id="kpi-agenda-realizados">0</p>
+                        </article>
                     </section>
 
                     <section class="panel">
