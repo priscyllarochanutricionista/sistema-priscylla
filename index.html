@@ -19,7 +19,7 @@
                 <div class="input-group"><label>Senha</label><input type="password" id="senha" required placeholder="••••••••"></div>
                 <p id="msg-erro-login" class="text-danger hidden">Login ou senha incorretos!</p>
                 <button type="submit" class="btn btn-primary btn-block">Entrar</button>
-                <p style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: #888;">Versão 1.5.0 - Atualização Pro</p>
+                <p style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: #888;">Versão 1.6.0 - Central de Relatórios Pro</p>
             </form>
         </section>
     </main>
@@ -37,7 +37,7 @@
                     <ul><li><a href="#pacientes">Pacientes</a></li><li><a href="#categorias">Categorias</a></li></ul>
                 </details>
                 <details class="nav-group"><summary><div class="summary-content"><i class="ph ph-chart-line-up"></i> Relatórios</div><i class="ph ph-caret-down arrow"></i></summary>
-                    <ul><li><a href="#rel-receitas">Financeiro Completo</a></li></ul>
+                    <ul><li><a href="#relatorios">Central de Relatórios</a></li></ul>
                 </details>
             </nav>
             <footer class="sidebar-footer"><button id="btn-logout" class="btn btn-secondary btn-block"><i class="ph ph-sign-out"></i> Sair</button></footer>
@@ -61,30 +61,12 @@
 
                 <div id="tela-agenda" class="view-section hidden">
                     <section class="kpi-grid" style="margin-bottom: 2rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-                        <article class="kpi-card" style="border-top: 3px solid var(--color-primary);">
-                            <h3>Total Agendado <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3>
-                            <p class="value" id="kpi-agenda-total">0</p>
-                        </article>
-                        <article class="kpi-card" style="border-top: 3px solid #0ea5e9;">
-                            <h3>1ª Consulta <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3>
-                            <p class="value" style="color: #0ea5e9;" id="kpi-agenda-prim">0</p>
-                        </article>
-                        <article class="kpi-card" style="border-top: 3px solid #f59e0b;">
-                            <h3>Retornos <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3>
-                            <p class="value" style="color: #f59e0b;" id="kpi-agenda-ret">0</p>
-                        </article>
-                        <article class="kpi-card" style="border-top: 3px solid var(--color-success);">
-                            <h3>Realizados <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3>
-                            <p class="value text-success" id="kpi-agenda-realizados">0</p>
-                        </article>
+                        <article class="kpi-card" style="border-top: 3px solid var(--color-primary);"><h3>Total Agendado <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3><p class="value" id="kpi-agenda-total">0</p></article>
+                        <article class="kpi-card" style="border-top: 3px solid #0ea5e9;"><h3>1ª Consulta <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3><p class="value" style="color: #0ea5e9;" id="kpi-agenda-prim">0</p></article>
+                        <article class="kpi-card" style="border-top: 3px solid #f59e0b;"><h3>Retornos <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3><p class="value" style="color: #f59e0b;" id="kpi-agenda-ret">0</p></article>
+                        <article class="kpi-card" style="border-top: 3px solid var(--color-success);"><h3>Realizados <span style="font-size:0.7rem; color:#888;">(Mês Atual)</span></h3><p class="value text-success" id="kpi-agenda-realizados">0</p></article>
                     </section>
-
-                    <section class="panel">
-                        <header class="panel-header"><h3>Agendar Nova Consulta</h3></header>
-                        <div class="panel-body">
-                            <form id="form-agenda"><div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;"><div class="input-group" style="flex: 1;"><label>Data e Hora</label><input type="datetime-local" id="data-agenda" required></div><div class="input-group" style="flex: 2;"><label>Nome do Paciente</label><input type="text" id="paciente-agenda" required></div><div class="input-group" style="flex: 1;"><label>Tipo</label><select id="tipo-agenda" class="form-select" required><option value="1ª Consulta">1ª Consulta</option><option value="Retorno">Retorno</option></select></div></div><div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-calendar-plus"></i> Agendar</button></div></form>
-                        </div>
-                    </section>
+                    <section class="panel"><header class="panel-header"><h3>Agendar Nova Consulta</h3></header><div class="panel-body"><form id="form-agenda"><div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;"><div class="input-group" style="flex: 1;"><label>Data e Hora</label><input type="datetime-local" id="data-agenda" required></div><div class="input-group" style="flex: 2;"><label>Nome do Paciente</label><input type="text" id="paciente-agenda" required></div><div class="input-group" style="flex: 1;"><label>Tipo</label><select id="tipo-agenda" class="form-select" required><option value="1ª Consulta">1ª Consulta</option><option value="Retorno">Retorno</option></select></div></div><div style="display: flex; justify-content: flex-end;"><button type="submit" class="btn btn-primary"><i class="ph ph-calendar-plus"></i> Agendar</button></div></form></div></section>
                     <section class="panel" style="margin-top: 2rem;"><header class="panel-header"><h3>Próximas Consultas</h3></header><div class="table-responsive"><table class="data-table"><thead><tr><th>Data/Hora</th><th>Paciente</th><th>Tipo</th><th>Status</th><th class="text-center">Ações</th></tr></thead><tbody id="tbody-agenda"></tbody></table></div></section>
                 </div>
 
@@ -109,15 +91,54 @@
                 </div>
 
                 <div id="tela-relatorios" class="view-section hidden">
-                    <section class="panel"><header class="panel-header"><h3>Filtro de Período Financeiro</h3></header><div class="panel-body"><form id="form-filtro-relatorio" style="display: flex; gap: 1.5rem; flex-wrap: wrap;"><div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;"><label>Data Inicial (De):</label><input type="date" id="filtro-inicio" required></div><div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;"><label>Data Final (Até):</label><input type="date" id="filtro-fim" required></div><div class="input-group" style="flex: 0 1 auto; justify-content: flex-end; align-items: flex-end; margin-bottom: 0;"><button type="submit" class="btn btn-primary"><i class="ph ph-funnel"></i> Gerar Relatório</button></div></form></div></section>
-                    <section class="panel" style="margin-top: 2rem;"><header class="panel-header" style="display: flex; justify-content: space-between; align-items: center;"><h3 id="titulo-resultados-relatorio">Resultados do Período</h3><button id="btn-gerar-pdf" class="btn btn-secondary" style="display: none; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><i class="ph ph-file-pdf" style="margin-right: 0.4rem; color: #dc2626;"></i> Baixar PDF</button></header><div class="table-responsive"><table class="data-table" id="tabela-relatorio-pdf"><thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr></thead><tbody id="tbody-relatorio"><tr><td colspan="4" class="text-center text-muted">Defina um período e clique em Gerar Relatório.</td></tr></tbody></table></div></section>
+                    <section class="panel">
+                        <header class="panel-header"><h3>Configurar Relatório</h3></header>
+                        <div class="panel-body">
+                            <form id="form-filtro-relatorio" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                                <div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                                    <label>Data Inicial (De):</label><input type="date" id="filtro-inicio" required>
+                                </div>
+                                <div class="input-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                                    <label>Data Final (Até):</label><input type="date" id="filtro-fim" required>
+                                </div>
+                                <div class="input-group" style="flex: 2; min-width: 250px; margin-bottom: 0;">
+                                    <label>Tipo de Relatório:</label>
+                                    <select id="tipo-relatorio" class="form-select" required>
+                                        <option value="faturamento">Financeiro Completo (Faturamento Geral)</option>
+                                        <option value="receitas">Apenas Receitas (Entradas)</option>
+                                        <option value="despesas">Apenas Despesas (Saídas)</option>
+                                        <option value="agenda">Agendamentos Clínicos</option>
+                                        <option value="kpis">Resumo de KPIs (Desempenho)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" style="flex: 1; justify-content: flex-end; align-items: flex-end; margin-bottom: 0;">
+                                    <button type="submit" class="btn btn-primary btn-block"><i class="ph ph-funnel"></i> Gerar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+                    <section class="panel" style="margin-top: 2rem;">
+                        <header class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 id="titulo-resultados-relatorio">Resultados do Período</h3>
+                            <button id="btn-gerar-pdf" class="btn btn-secondary" style="display: none; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><i class="ph ph-file-pdf" style="margin-right: 0.4rem; color: #dc2626;"></i> Baixar PDF</button>
+                        </header>
+                        <div class="table-responsive">
+                            <table class="data-table" id="tabela-relatorio-pdf">
+                                <thead id="thead-relatorio">
+                                    <tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr>
+                                </thead>
+                                <tbody id="tbody-relatorio">
+                                    <tr><td colspan="4" class="text-center text-muted">Defina o período e o tipo, depois clique em Gerar.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
             </div>
         </main>
     </div>
 
     <div id="toast-container" class="toast-container"></div>
-
     <div id="modal-editar" class="modal-overlay hidden">
         <div class="modal-box">
             <h3 style="margin-bottom: 1.5rem; color: var(--color-text-main); font-size: 1.25rem;">Editar Registro</h3>
@@ -129,7 +150,6 @@
             </form>
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
