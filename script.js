@@ -1,7 +1,5 @@
-// ==========================================
-// 1. SISTEMA DE LOGIN (BLINDADO)
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. SISTEMA DE LOGIN 
     const formLogin = document.getElementById('form-login');
     const viewLogin = document.getElementById('view-login');
     const viewApp = document.getElementById('view-app');
@@ -9,40 +7,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (formLogin) {
         formLogin.addEventListener('submit', (e) => {
-            e.preventDefault(); // Bloqueia o recarregamento da página IMEDIATAMENTE
-
+            e.preventDefault(); 
             if (document.getElementById('login').value === 'admin' && document.getElementById('senha').value === 'admin') {
-                msgErroLogin.classList.add('hidden'); 
-                viewLogin.classList.add('hidden'); 
-                viewApp.classList.remove('hidden');
-                
-                // Inicializa o banco de dados ao logar
+                msgErroLogin.classList.add('hidden'); viewLogin.classList.add('hidden'); viewApp.classList.remove('hidden');
+                // INICIALIZA O BANCO DE DADOS
                 carregarPainelFinanceiro();
                 carregarCategorias();
-            } else {
-                msgErroLogin.classList.remove('hidden');
-            }
+                carregarPacientes();
+            } else { msgErroLogin.classList.remove('hidden'); }
         });
     }
 
-    const btnLogout = document.getElementById('btn-logout');
-    if(btnLogout) {
-        btnLogout.addEventListener('click', () => {
-            viewApp.classList.add('hidden'); 
-            viewLogin.classList.remove('hidden'); 
-            formLogin.reset();
-        });
-    }
+    document.getElementById('btn-logout').addEventListener('click', () => {
+        viewApp.classList.add('hidden'); viewLogin.classList.remove('hidden'); formLogin.reset();
+    });
 
-    // ==========================================
     // 2. ROTEADOR DE TELAS
-    // ==========================================
     const telas = {
         'dashboard': document.getElementById('tela-dashboard'), 'agenda': document.getElementById('tela-agenda'),
         'receitas': document.getElementById('tela-receitas'), 'despesas': document.getElementById('tela-despesas'),
         'pacientes': document.getElementById('tela-pacientes'), 'categorias': document.getElementById('tela-categorias'),
-        'rel-receitas': document.getElementById('tela-relatorios'), 'rel-despesas': document.getElementById('tela-relatorios'),
-        'rel-resultado': document.getElementById('tela-relatorios'), 'rel-agendamentos': document.getElementById('tela-rel-agendamentos')
+        'rel-receitas': document.getElementById('tela-relatorios'), 'rel-agendamentos': document.getElementById('tela-relatorios')
     };
 
     document.querySelectorAll('.sidebar a').forEach(link => {
@@ -51,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 const destino = e.currentTarget.getAttribute('href').replace('#', '');
                 if (!telas[destino]) return;
-                
                 document.querySelectorAll('.sidebar a').forEach(l => l.classList.remove('active'));
                 e.currentTarget.classList.add('active');
                 Object.values(telas).forEach(t => { if (t) t.classList.add('hidden'); });
@@ -61,205 +45,187 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ==========================================
-    // 3. EVENTOS DE SALVAR (RECEITAS E DESPESAS)
-    // ==========================================
-    const formReceita = document.getElementById('form-receita');
-    if (formReceita) {
-        formReceita.addEventListener('submit', async (e) => {
+    // 3. EVENTOS DE SALVAR (FORMULÁRIOS)
+    function configurarFormulario(idForm, tabela, btnClass, preparadorDeDados, callbackSucesso) {
+        const form = document.getElementById(idForm);
+        if (!form) return;
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = formReceita.querySelector('button[type="submit"]');
+            const btn = form.querySelector('button[type="submit"]');
             const txtOrg = btn.innerHTML;
-            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Salvando...'; btn.disabled = true;
-
-            const dados = [
-                document.getElementById('data-receita').value,
-                'Receita', 
-                document.getElementById('desc-receita').value,
-                '', 
-                document.getElementById('valor-receita').value,
-                'Pago' 
-            ];
-
-            const res = await enviarParaBanco('salvar', 'Lancamentos', dados);
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Aguarde...'; btn.disabled = true;
+            
+            const dados = preparadorDeDados();
+            const res = await enviarParaBanco('salvar', tabela, dados);
             btn.innerHTML = txtOrg; btn.disabled = false;
 
             if (res.status === 'sucesso') {
-                alert('✅ Receita registrada com sucesso!');
-                formReceita.reset();
-                carregarPainelFinanceiro(); 
+                alert(`✅ Salvo com sucesso!`);
+                form.reset();
+                callbackSucesso();
             } else {
                 alert('❌ Erro: ' + res.mensagem);
             }
         });
     }
 
-    const formDespesa = document.getElementById('form-despesa');
-    if (formDespesa) {
-        formDespesa.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = formDespesa.querySelector('button[type="submit"]');
-            const txtOrg = btn.innerHTML;
-            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Salvando...'; btn.disabled = true;
+    // A - Form Receita
+    configurarFormulario('form-receita', 'Lancamentos', 'btn-primary', () => [
+        document.getElementById('data-receita').value, 'Receita', document.getElementById('desc-receita').value,
+        '', document.getElementById('valor-receita').value, 'Pago'
+    ], carregarPainelFinanceiro);
 
-            const dados = [
-                document.getElementById('data-despesa').value,
-                'Despesa', 
-                document.getElementById('desc-despesa').value,
-                document.getElementById('cat-despesa').value,
-                document.getElementById('valor-despesa').value,
-                'Pago' 
-            ];
+    // B - Form Despesa
+    configurarFormulario('form-despesa', 'Lancamentos', 'btn-danger', () => [
+        document.getElementById('data-despesa').value, 'Despesa', document.getElementById('desc-despesa').value,
+        document.getElementById('cat-despesa').value, document.getElementById('valor-despesa').value, 'Pago'
+    ], carregarPainelFinanceiro);
 
-            const res = await enviarParaBanco('salvar', 'Lancamentos', dados);
-            btn.innerHTML = txtOrg; btn.disabled = false;
+    // C - Form Categoria (NOVO)
+    configurarFormulario('form-categoria', 'Categorias', 'btn-primary', () => [
+        document.getElementById('nome-categoria').value,
+        document.getElementById('nat-categoria').value
+    ], () => { carregarCategorias(); carregarPainelFinanceiro(); });
 
-            if (res.status === 'sucesso') {
-                alert('✅ Despesa registrada com sucesso!');
-                formDespesa.reset();
-                carregarPainelFinanceiro();
-            } else {
-                alert('❌ Erro: ' + res.mensagem);
-            }
-        });
-    }
+    // D - Form Paciente (NOVO)
+    configurarFormulario('form-paciente', 'Pacientes', 'btn-primary', () => {
+        const hoje = new Date().toISOString().split('T')[0];
+        return [
+            document.getElementById('nome-paciente').value,
+            document.getElementById('tel-paciente').value,
+            document.getElementById('email-paciente').value || 'Sem e-mail',
+            hoje
+        ];
+    }, carregarPacientes);
+
 }); // Fim do DOMContentLoaded
 
 // ==========================================
-// 4. CONFIGURAÇÕES E API (GOOGLE SHEETS)
+// 4. API GOOGLE SHEETS E FORMATAÇÕES
 // ==========================================
 const API_URL = 'https://script.google.com/macros/s/AKfycbzmrx8ds2GZLGjOoFz-VKdjMEPXHagDsYwRPuxX_YIp4KpoQvnNOl6PIsQGFba77SIJng/exec';
 
 function formatarMoeda(valor) {
-    const numero = parseFloat(valor) || 0;
-    return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return (parseFloat(valor) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function formatarData(dataISO) {
-    if (!dataISO) return '-';
-    const dataLimpa = dataISO.substring(0, 10); 
+// O NOVO FORMATADOR DE DATA "ANTI-BUG"
+function formatarData(valor) {
+    if (!valor) return '-';
+    // Limpa a string cortando lixos do fuso horário
+    const dataLimpa = String(valor).split('T')[0]; 
     const partes = dataLimpa.split('-');
-    if (partes.length !== 3) return dataISO;
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    if (partes.length >= 3) {
+        let ano = partes[partes.length - 3].replace('+', '');
+        // Se o ano vier com 5 ou 6 dígitos (ex: 020026), pega só os 4 últimos
+        if (ano.length > 4) ano = ano.substring(ano.length - 4); 
+        const mes = partes[partes.length - 2];
+        const dia = partes[partes.length - 1];
+        return `${dia}/${mes}/${ano}`;
+    }
+    return valor;
 }
 
 async function buscarDados(tabela) {
     try {
-        const resposta = await fetch(`${API_URL}?tabela=${tabela}`);
-        const resultado = await resposta.json();
-        return resultado.dados || [];
-    } catch (erro) {
-        console.error(`Erro ao buscar ${tabela}:`, erro);
-        return [];
-    }
+        const res = await fetch(`${API_URL}?tabela=${tabela}`);
+        const json = await res.json();
+        return json.dados || [];
+    } catch (e) { console.error(e); return []; }
 }
 
 async function enviarParaBanco(acao, tabela, dados = null, id = null) {
-    const pacote = { acao, tabela, dados, id };
-    const resposta = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(pacote)
+    const res = await fetch(API_URL, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ acao, tabela, dados, id })
     });
-    return await resposta.json();
+    return await res.json();
 }
 
 // ==========================================
-// 5. INTELIGÊNCIA FINANCEIRA (DASHBOARD)
+// 5. INTELIGÊNCIA DE LISTAGEM
 // ==========================================
 async function carregarPainelFinanceiro() {
-    const lancamentos = await buscarDados('Lancamentos');
+    const lanc = await buscarDados('Lancamentos');
+    let rec = 0, des = 0;
+    const lRec = [], lDes = [];
     
-    let totalReceita = 0;
-    let totalDespesa = 0;
-    const listaReceitas = [];
-    const listaDespesas = [];
-
-    lancamentos.forEach(lanc => {
-        const valor = parseFloat(lanc.Valor) || 0;
-        if (lanc.Tipo === 'Receita') {
-            totalReceita += valor;
-            listaReceitas.push(lanc);
-        } else if (lanc.Tipo === 'Despesa') {
-            totalDespesa += valor;
-            listaDespesas.push(lanc);
-        }
+    lanc.forEach(l => {
+        const val = parseFloat(l.Valor) || 0;
+        if (l.Tipo === 'Receita') { rec += val; lRec.push(l); } 
+        else if (l.Tipo === 'Despesa') { des += val; lDes.push(l); }
     });
 
-    document.getElementById('kpi-receita').textContent = formatarMoeda(totalReceita);
-    document.getElementById('kpi-despesa').textContent = formatarMoeda(totalDespesa);
-    document.getElementById('kpi-lucro').textContent = formatarMoeda(totalReceita - totalDespesa);
+    document.getElementById('kpi-receita').textContent = formatarMoeda(rec);
+    document.getElementById('kpi-despesa').textContent = formatarMoeda(des);
+    document.getElementById('kpi-lucro').textContent = formatarMoeda(rec - des);
 
-    renderizarTabelaFinanceira('tbody-receitas', listaReceitas.reverse().slice(0, 10), 'Receita');
-    renderizarTabelaFinanceira('tbody-despesas', listaDespesas.reverse().slice(0, 10), 'Despesa');
-}
+    renderizarTabela('tbody-receitas', lRec.reverse().slice(0, 10), l => `
+        <td>${formatarData(l.Data)}</td><td><strong>${l.Descricao}</strong></td><td class="text-success">${formatarMoeda(l.Valor)}</td>
+        <td class="text-center">${botoesAcao('Lancamentos', l.ID)}</td>
+    `);
 
-function renderizarTabelaFinanceira(idTbody, dados, tipo) {
-    const tbody = document.getElementById(idTbody);
-    if (!tbody) return;
-
-    if (dados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Nenhum registro encontrado.</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = ''; 
-    dados.forEach(item => {
-        const tr = document.createElement('tr');
-        if (tipo === 'Receita') {
-            tr.innerHTML = `
-                <td>${formatarData(item.Data)}</td>
-                <td><strong>${item.Descricao}</strong></td>
-                <td class="text-success" style="font-weight: 600;">${formatarMoeda(item.Valor)}</td>
-                <td class="text-center">
-                    <button onclick="editarRegistro('${item.ID}')" class="btn-icon" style="color: var(--color-primary); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;" title="Editar"><i class="ph ph-pencil-simple"></i></button>
-                    <button onclick="excluirRegistro('Lancamentos', '${item.ID}')" class="btn-icon" style="color: var(--color-danger); background: none; border: none; font-size: 1.1rem; cursor: pointer;" title="Excluir"><i class="ph ph-trash"></i></button>
-                </td>
-            `;
-        } else {
-            tr.innerHTML = `
-                <td>${formatarData(item.Data)}</td>
-                <td><span class="badge" style="background: #f1f5f9; color: #475569; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${item.Categoria || 'Sem Categoria'}</span></td>
-                <td><strong>${item.Descricao}</strong></td>
-                <td class="text-danger" style="font-weight: 600;">${formatarMoeda(item.Valor)}</td>
-                <td class="text-center">
-                    <button onclick="editarRegistro('${item.ID}')" class="btn-icon" style="color: var(--color-primary); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;"><i class="ph ph-pencil-simple"></i></button>
-                    <button onclick="excluirRegistro('Lancamentos', '${item.ID}')" class="btn-icon" style="color: var(--color-danger); background: none; border: none; font-size: 1.1rem; cursor: pointer;"><i class="ph ph-trash"></i></button>
-                </td>
-            `;
-        }
-        tbody.appendChild(tr);
-    });
+    renderizarTabela('tbody-despesas', lDes.reverse().slice(0, 10), l => `
+        <td>${formatarData(l.Data)}</td><td><span class="badge">${l.Categoria||'Geral'}</span></td><td><strong>${l.Descricao}</strong></td><td class="text-danger">${formatarMoeda(l.Valor)}</td>
+        <td class="text-center">${botoesAcao('Lancamentos', l.ID)}</td>
+    `);
 }
 
 async function carregarCategorias() {
-    const categorias = await buscarDados('Categorias');
+    const cats = await buscarDados('Categorias');
+    
+    // Alimenta o Select do form de Despesas
     const select = document.getElementById('cat-despesa');
-    if (!select) return;
+    if (select) {
+        select.innerHTML = '<option value="">Selecione uma categoria...</option>';
+        cats.forEach(c => { if(c.Natureza === 'Despesa') select.innerHTML += `<option value="${c.Nome_Categoria}">${c.Nome_Categoria}</option>`; });
+    }
 
-    select.innerHTML = '<option value="">Selecione uma categoria...</option>';
-    categorias.forEach(cat => {
-        if (cat.Natureza === 'Despesa') {
-            select.innerHTML += `<option value="${cat.Nome_Categoria}">${cat.Nome_Categoria}</option>`;
-        }
+    // Alimenta a Tabela de Categorias
+    renderizarTabela('tbody-categorias', cats.reverse(), c => {
+        const cor = c.Natureza === 'Receita' ? 'success' : 'danger';
+        return `<td><strong>${c.Nome_Categoria}</strong></td><td><span class="text-${cor}">${c.Natureza}</span></td><td class="text-center">${botoesAcao('Categorias', c.ID)}</td>`;
     });
 }
 
+async function carregarPacientes() {
+    const pacs = await buscarDados('Pacientes');
+    renderizarTabela('tbody-pacientes', pacs.reverse(), p => `
+        <td>${formatarData(p.Data_Cadastro)}</td><td><strong>${p.Nome_Completo}</strong></td><td>${p.Telefone}</td><td>${p.Email}</td>
+        <td class="text-center">${botoesAcao('Pacientes', p.ID)}</td>
+    `);
+}
+
+// Função Utilitária para renderizar tabelas dinâmicas
+function renderizarTabela(id, dados, templateTr) {
+    const tbody = document.getElementById(id);
+    if(!tbody) return;
+    if(dados.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Nenhum registro encontrado.</td></tr>`; return; }
+    tbody.innerHTML = '';
+    dados.forEach(d => { const tr = document.createElement('tr'); tr.innerHTML = templateTr(d); tbody.appendChild(tr); });
+}
+
+function botoesAcao(tabela, id) {
+    return `
+        <button onclick="editarRegistro('${id}')" class="btn-icon" style="color: var(--color-primary); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;"><i class="ph ph-pencil-simple"></i></button>
+        <button onclick="excluirRegistro('${tabela}', '${id}')" class="btn-icon" style="color: var(--color-danger); background: none; border: none; font-size: 1.1rem; cursor: pointer;"><i class="ph ph-trash"></i></button>
+    `;
+}
+
 // ==========================================
-// 6. EXCLUIR E EDITAR (Globais)
+// 6. AÇÕES GLOBAIS (EXCLUIR / EDITAR)
 // ==========================================
 window.excluirRegistro = async function(tabela, id) {
-    if (!confirm('Tem certeza que deseja apagar este registro permanentemente?')) return;
-    
+    if (!confirm(`Tem certeza que deseja apagar este registro de ${tabela}?`)) return;
     const res = await enviarParaBanco('excluir', tabela, null, id);
     if (res.status === 'sucesso') {
         alert('🗑️ Registro excluído.');
-        carregarPainelFinanceiro(); 
-    } else {
-        alert('❌ Erro ao excluir: ' + res.mensagem);
-    }
+        if(tabela === 'Lancamentos') carregarPainelFinanceiro();
+        if(tabela === 'Categorias') carregarCategorias();
+        if(tabela === 'Pacientes') carregarPacientes();
+    } else alert('❌ Erro: ' + res.mensagem);
 }
 
 window.editarRegistro = function(id) {
-    alert('⚠️ A Edição completa será ativada na próxima atualização para garantir a integridade do banco de dados.');
+    alert('⚠️ A Edição em Formulário (Update) será lançada na última atualização junto com o PDF.');
 }
