@@ -1,158 +1,265 @@
 // ==========================================
-// 1. SELETORES DO DOM (Login e Telas)
+// 1. SISTEMA DE LOGIN (BLINDADO)
 // ==========================================
-const formLogin = document.getElementById('form-login');
-const inputLogin = document.getElementById('login');
-const inputSenha = document.getElementById('senha');
-const msgErroLogin = document.getElementById('msg-erro-login');
+document.addEventListener('DOMContentLoaded', () => {
+    const formLogin = document.getElementById('form-login');
+    const viewLogin = document.getElementById('view-login');
+    const viewApp = document.getElementById('view-app');
+    const msgErroLogin = document.getElementById('msg-erro-login');
 
-const viewLogin = document.getElementById('view-login');
-const viewApp = document.getElementById('view-app');
-const btnLogout = document.getElementById('btn-logout');
+    if (formLogin) {
+        formLogin.addEventListener('submit', (e) => {
+            e.preventDefault(); // Bloqueia o recarregamento da página IMEDIATAMENTE
+
+            if (document.getElementById('login').value === 'admin' && document.getElementById('senha').value === 'admin') {
+                msgErroLogin.classList.add('hidden'); 
+                viewLogin.classList.add('hidden'); 
+                viewApp.classList.remove('hidden');
+                
+                // Inicializa o banco de dados ao logar
+                carregarPainelFinanceiro();
+                carregarCategorias();
+            } else {
+                msgErroLogin.classList.remove('hidden');
+            }
+        });
+    }
+
+    const btnLogout = document.getElementById('btn-logout');
+    if(btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            viewApp.classList.add('hidden'); 
+            viewLogin.classList.remove('hidden'); 
+            formLogin.reset();
+        });
+    }
+
+    // ==========================================
+    // 2. ROTEADOR DE TELAS
+    // ==========================================
+    const telas = {
+        'dashboard': document.getElementById('tela-dashboard'), 'agenda': document.getElementById('tela-agenda'),
+        'receitas': document.getElementById('tela-receitas'), 'despesas': document.getElementById('tela-despesas'),
+        'pacientes': document.getElementById('tela-pacientes'), 'categorias': document.getElementById('tela-categorias'),
+        'rel-receitas': document.getElementById('tela-relatorios'), 'rel-despesas': document.getElementById('tela-relatorios'),
+        'rel-resultado': document.getElementById('tela-relatorios'), 'rel-agendamentos': document.getElementById('tela-rel-agendamentos')
+    };
+
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        if (link.getAttribute('href').startsWith('#')) {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const destino = e.currentTarget.getAttribute('href').replace('#', '');
+                if (!telas[destino]) return;
+                
+                document.querySelectorAll('.sidebar a').forEach(l => l.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                Object.values(telas).forEach(t => { if (t) t.classList.add('hidden'); });
+                telas[destino].classList.remove('hidden');
+                document.getElementById('titulo-pagina').textContent = e.currentTarget.textContent.trim();
+            });
+        }
+    });
+
+    // ==========================================
+    // 3. EVENTOS DE SALVAR (RECEITAS E DESPESAS)
+    // ==========================================
+    const formReceita = document.getElementById('form-receita');
+    if (formReceita) {
+        formReceita.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = formReceita.querySelector('button[type="submit"]');
+            const txtOrg = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Salvando...'; btn.disabled = true;
+
+            const dados = [
+                document.getElementById('data-receita').value,
+                'Receita', 
+                document.getElementById('desc-receita').value,
+                '', 
+                document.getElementById('valor-receita').value,
+                'Pago' 
+            ];
+
+            const res = await enviarParaBanco('salvar', 'Lancamentos', dados);
+            btn.innerHTML = txtOrg; btn.disabled = false;
+
+            if (res.status === 'sucesso') {
+                alert('✅ Receita registrada com sucesso!');
+                formReceita.reset();
+                carregarPainelFinanceiro(); 
+            } else {
+                alert('❌ Erro: ' + res.mensagem);
+            }
+        });
+    }
+
+    const formDespesa = document.getElementById('form-despesa');
+    if (formDespesa) {
+        formDespesa.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = formDespesa.querySelector('button[type="submit"]');
+            const txtOrg = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Salvando...'; btn.disabled = true;
+
+            const dados = [
+                document.getElementById('data-despesa').value,
+                'Despesa', 
+                document.getElementById('desc-despesa').value,
+                document.getElementById('cat-despesa').value,
+                document.getElementById('valor-despesa').value,
+                'Pago' 
+            ];
+
+            const res = await enviarParaBanco('salvar', 'Lancamentos', dados);
+            btn.innerHTML = txtOrg; btn.disabled = false;
+
+            if (res.status === 'sucesso') {
+                alert('✅ Despesa registrada com sucesso!');
+                formDespesa.reset();
+                carregarPainelFinanceiro();
+            } else {
+                alert('❌ Erro: ' + res.mensagem);
+            }
+        });
+    }
+}); // Fim do DOMContentLoaded
 
 // ==========================================
-// 2. LÓGICA DE AUTENTICAÇÃO SIMULADA
+// 4. CONFIGURAÇÕES E API (GOOGLE SHEETS)
 // ==========================================
-function realizarLogin(evento) {
-    evento.preventDefault(); 
+const API_URL = 'https://script.google.com/macros/s/AKfycbzmrx8ds2GZLGjOoFz-VKdjMEPXHagDsYwRPuxX_YIp4KpoQvnNOl6PIsQGFba77SIJng/exec';
 
-    const loginDigitado = inputLogin.value;
-    const senhaDigitada = inputSenha.value;
+function formatarMoeda(valor) {
+    const numero = parseFloat(valor) || 0;
+    return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
-    if (loginDigitado === 'admin' && senhaDigitada === 'admin') {
-        msgErroLogin.classList.add('hidden'); 
-        viewLogin.classList.add('hidden');    
-        viewApp.classList.remove('hidden');   
-    } else {
-        msgErroLogin.classList.remove('hidden'); 
+function formatarData(dataISO) {
+    if (!dataISO) return '-';
+    const dataLimpa = dataISO.substring(0, 10); 
+    const partes = dataLimpa.split('-');
+    if (partes.length !== 3) return dataISO;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+async function buscarDados(tabela) {
+    try {
+        const resposta = await fetch(`${API_URL}?tabela=${tabela}`);
+        const resultado = await resposta.json();
+        return resultado.dados || [];
+    } catch (erro) {
+        console.error(`Erro ao buscar ${tabela}:`, erro);
+        return [];
     }
 }
 
-function realizarLogout() {
-    viewApp.classList.add('hidden');
-    viewLogin.classList.remove('hidden');
-    formLogin.reset(); 
+async function enviarParaBanco(acao, tabela, dados = null, id = null) {
+    const pacote = { acao, tabela, dados, id };
+    const resposta = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(pacote)
+    });
+    return await resposta.json();
 }
 
 // ==========================================
-// 3. ROTEADOR DE TELAS (Navegação do Menu)
+// 5. INTELIGÊNCIA FINANCEIRA (DASHBOARD)
 // ==========================================
-const telas = {
-    'dashboard': document.getElementById('tela-dashboard'),
-    'agenda': document.getElementById('tela-agenda'),
-    'receitas': document.getElementById('tela-lancamentos'),
-    'despesas': document.getElementById('tela-lancamentos'),
-    'pacientes': document.getElementById('tela-pacientes'),
-    'categorias': document.getElementById('tela-categorias'),
-    'rel-receitas': document.getElementById('tela-relatorios'),
-    'rel-despesas': document.getElementById('tela-relatorios'),
-    'rel-resultado': document.getElementById('tela-relatorios'),
-    'rel-agendamentos': document.getElementById('tela-rel-agendamentos')
-};
-
-const linksMenu = document.querySelectorAll('.sidebar a');
-const tituloPagina = document.getElementById('titulo-pagina');
-
-function trocarTela(evento) {
-    evento.preventDefault();
-
-    const linkClicado = evento.currentTarget;
-    const destino = linkClicado.getAttribute('href').replace('#', ''); 
+async function carregarPainelFinanceiro() {
+    const lancamentos = await buscarDados('Lancamentos');
     
-    if (!telas[destino]) return; 
+    let totalReceita = 0;
+    let totalDespesa = 0;
+    const listaReceitas = [];
+    const listaDespesas = [];
 
-    linksMenu.forEach(link => link.classList.remove('active'));
-    linkClicado.classList.add('active');
-
-    Object.values(telas).forEach(tela => {
-        if (tela) tela.classList.add('hidden');
+    lancamentos.forEach(lanc => {
+        const valor = parseFloat(lanc.Valor) || 0;
+        if (lanc.Tipo === 'Receita') {
+            totalReceita += valor;
+            listaReceitas.push(lanc);
+        } else if (lanc.Tipo === 'Despesa') {
+            totalDespesa += valor;
+            listaDespesas.push(lanc);
+        }
     });
 
-    telas[destino].classList.remove('hidden');
-    tituloPagina.textContent = linkClicado.textContent.trim();
+    document.getElementById('kpi-receita').textContent = formatarMoeda(totalReceita);
+    document.getElementById('kpi-despesa').textContent = formatarMoeda(totalDespesa);
+    document.getElementById('kpi-lucro').textContent = formatarMoeda(totalReceita - totalDespesa);
+
+    renderizarTabelaFinanceira('tbody-receitas', listaReceitas.reverse().slice(0, 10), 'Receita');
+    renderizarTabelaFinanceira('tbody-despesas', listaDespesas.reverse().slice(0, 10), 'Despesa');
 }
 
-// ==========================================
-// 4. INTEGRAÇÃO COM GOOGLE SHEETS (API)
-// ==========================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbwXi5dBCjEpKEfskGrk64OY3KBapA5TlDs7KXiP9x6rDvWWY37kd8IACyX9ZrXyR21Jhg/exec';
-const formLancamento = document.getElementById('form-lancamento');
+function renderizarTabelaFinanceira(idTbody, dados, tipo) {
+    const tbody = document.getElementById(idTbody);
+    if (!tbody) return;
 
-// Só adiciona o evento se o formulário existir na tela
-if (formLancamento) {
-    formLancamento.addEventListener('submit', async function(evento) {
-        
-        // ISSO AQUI IMPEDE A PÁGINA DE RECARREGAR (E VOLTAR PRO LOGIN)
-        evento.preventDefault(); 
+    if (dados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Nenhum registro encontrado.</td></tr>`;
+        return;
+    }
 
-        const btnSalvar = formLancamento.querySelector('button[type="submit"]');
-        const textoOriginal = btnSalvar.innerHTML;
-        
-        // Efeito visual de carregamento
-        btnSalvar.innerHTML = '<i class="ph ph-spinner ph-spin" style="margin-right: 0.5rem;"></i> Registrando...';
-        btnSalvar.disabled = true;
-        btnSalvar.style.opacity = '0.7';
+    tbody.innerHTML = ''; 
+    dados.forEach(item => {
+        const tr = document.createElement('tr');
+        if (tipo === 'Receita') {
+            tr.innerHTML = `
+                <td>${formatarData(item.Data)}</td>
+                <td><strong>${item.Descricao}</strong></td>
+                <td class="text-success" style="font-weight: 600;">${formatarMoeda(item.Valor)}</td>
+                <td class="text-center">
+                    <button onclick="editarRegistro('${item.ID}')" class="btn-icon" style="color: var(--color-primary); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;" title="Editar"><i class="ph ph-pencil-simple"></i></button>
+                    <button onclick="excluirRegistro('Lancamentos', '${item.ID}')" class="btn-icon" style="color: var(--color-danger); background: none; border: none; font-size: 1.1rem; cursor: pointer;" title="Excluir"><i class="ph ph-trash"></i></button>
+                </td>
+            `;
+        } else {
+            tr.innerHTML = `
+                <td>${formatarData(item.Data)}</td>
+                <td><span class="badge" style="background: #f1f5f9; color: #475569; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">${item.Categoria || 'Sem Categoria'}</span></td>
+                <td><strong>${item.Descricao}</strong></td>
+                <td class="text-danger" style="font-weight: 600;">${formatarMoeda(item.Valor)}</td>
+                <td class="text-center">
+                    <button onclick="editarRegistro('${item.ID}')" class="btn-icon" style="color: var(--color-primary); background: none; border: none; font-size: 1.1rem; cursor: pointer; margin-right: 0.5rem;"><i class="ph ph-pencil-simple"></i></button>
+                    <button onclick="excluirRegistro('Lancamentos', '${item.ID}')" class="btn-icon" style="color: var(--color-danger); background: none; border: none; font-size: 1.1rem; cursor: pointer;"><i class="ph ph-trash"></i></button>
+                </td>
+            `;
+        }
+        tbody.appendChild(tr);
+    });
+}
 
-        // Captura os dados exatos do formulário
-        const dataDigitada = document.getElementById('data-lancamento').value;
-        const tipoSelecionado = document.getElementById('tipo-lancamento').value;
-        const descricaoDigitada = document.getElementById('descricao').value;
-        const categoriaSelecionada = document.getElementById('categoria').value;
-        const valorDigitado = document.getElementById('valor').value;
-        const statusSelecionado = document.getElementById('status-pagamento').value;
+async function carregarCategorias() {
+    const categorias = await buscarDados('Categorias');
+    const select = document.getElementById('cat-despesa');
+    if (!select) return;
 
-        // Prepara o pacote para a nossa API
-        const pacoteDeDados = {
-            tabela: "Lancamentos",
-            dados: [
-                dataDigitada,
-                tipoSelecionado,
-                descricaoDigitada,
-                categoriaSelecionada,
-                valorDigitado,
-                statusSelecionado
-            ]
-        };
-
-        try {
-            // Envia para o Google Sheets (Usamos text/plain para evitar bloqueios de CORS do navegador)
-            const resposta = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                },
-                body: JSON.stringify(pacoteDeDados)
-            });
-
-            const resultado = await resposta.json();
-
-            if (resultado.status === 'sucesso') {
-                alert('✅ Lançamento salvo com sucesso no banco de dados!');
-                formLancamento.reset(); 
-            } else {
-                alert('❌ Erro retornado pelo servidor: ' + resultado.mensagem);
-            }
-
-        } catch (erro) {
-            alert('❌ Ops! Erro de conexão ao salvar. Verifique sua internet.');
-            console.error(erro);
-        } finally {
-            // Restaura o botão
-            btnSalvar.innerHTML = textoOriginal;
-            btnSalvar.disabled = false;
-            btnSalvar.style.opacity = '1';
+    select.innerHTML = '<option value="">Selecione uma categoria...</option>';
+    categorias.forEach(cat => {
+        if (cat.Natureza === 'Despesa') {
+            select.innerHTML += `<option value="${cat.Nome_Categoria}">${cat.Nome_Categoria}</option>`;
         }
     });
 }
 
 // ==========================================
-// 5. INICIALIZAÇÃO DE EVENTOS
+// 6. EXCLUIR E EDITAR (Globais)
 // ==========================================
-formLogin.addEventListener('submit', realizarLogin);
-btnLogout.addEventListener('click', realizarLogout);
-
-linksMenu.forEach(link => {
-    if (link.getAttribute('href').startsWith('#')) {
-        link.addEventListener('click', trocarTela);
+window.excluirRegistro = async function(tabela, id) {
+    if (!confirm('Tem certeza que deseja apagar este registro permanentemente?')) return;
+    
+    const res = await enviarParaBanco('excluir', tabela, null, id);
+    if (res.status === 'sucesso') {
+        alert('🗑️ Registro excluído.');
+        carregarPainelFinanceiro(); 
+    } else {
+        alert('❌ Erro ao excluir: ' + res.mensagem);
     }
-});
+}
+
+window.editarRegistro = function(id) {
+    alert('⚠️ A Edição completa será ativada na próxima atualização para garantir a integridade do banco de dados.');
+}
