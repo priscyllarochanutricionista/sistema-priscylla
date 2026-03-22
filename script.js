@@ -178,7 +178,15 @@ function formatarData(valor) {
     return valor;
 }
 function formatarDataHora(valorISO) {
-    if(!valorISO) return '-'; try { const [d, h] = valorISO.split('T'); if(!h) return formatarData(d); return `${formatarData(d)} às ${h.substring(0,5)}`; } catch(e) { return valorISO; }
+    if(!valorISO) return '-'; 
+    try { 
+        const valStr = String(valorISO);
+        const [d, h] = valStr.split('T'); 
+        if(!h) return formatarData(d); 
+        return `${formatarData(d)} às ${h.substring(0,5)}`; 
+    } catch(e) { 
+        return valorISO; 
+    }
 }
 
 async function buscarDados(tabela) { try { const r = await fetch(`${API_URL}?tabela=${tabela}`); const j = await r.json(); return j.dados || []; } catch(e) { return []; } }
