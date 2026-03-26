@@ -55,23 +55,11 @@ label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--color
 input { width: 100%; padding: 0.7rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 1rem; }
 input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(178, 31, 102, 0.2); }
 
-/* Estilo para a caixa de seleção (Select) */
 select.form-select {
-  width: 100%;
-  padding: 0.7rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  background-color: var(--color-surface);
-  color: var(--color-text-main);
-  cursor: pointer;
+  width: 100%; padding: 0.7rem; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  font-size: 0.95rem; background-color: var(--color-surface); color: var(--color-text-main); cursor: pointer;
 }
-select.form-select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(178, 31, 102, 0.2);
-}
-
+select.form-select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(178, 31, 102, 0.2); }
 
 /* ==========================================
    3. LOGIN E LOGO
@@ -82,49 +70,37 @@ select.form-select:focus {
 .login-header p { text-align: center; color: var(--color-text-muted); margin-bottom: 2rem; }
 
 /* ==========================================
-   4. LAYOUT DO APP E SIDEBAR (Nova Identidade)
+   4. LAYOUT DO APP E SIDEBAR
    ========================================== */
-   .app-layout { display: flex; height: 100vh; overflow: hidden; }
+.app-layout { display: flex; height: 100vh; overflow: hidden; }
 
-   .sidebar { width: 260px; background: var(--color-sidebar); border-right: 1px solid var(--color-border); display: flex; flex-direction: column; }
-   .sidebar-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid var(--color-bg-app); }
-   .sidebar-logo { width: 100%; max-width: 180px; }
-   
-   .sidebar-nav { padding: 1.5rem 0; flex-grow: 1; overflow-y: auto; }
-   
-   /* Estilo base para links isolados e títulos expansíveis */
-   .nav-single a, .nav-group summary { 
-       display: flex; align-items: center; justify-content: space-between;
-       padding: 0.75rem 1.5rem; font-weight: 600; color: var(--color-text-muted);
-       cursor: pointer; list-style: none; transition: all 0.2s; outline: none; /* Remove a borda preta do clique */
-   }
-   
-   /* Alinhamento do ícone principal com o texto */
-   .nav-single a i, .summary-content i { font-size: 1.25rem; margin-right: 0.75rem; color: var(--color-primary); }
-   .summary-content { display: flex; align-items: center; }
-   
-   /* Remove a seta padrão e estiliza a nossa setinha customizada */
-   .nav-group summary::-webkit-details-marker { display: none; }
-   .nav-group summary .arrow { font-size: 0.9rem; color: var(--color-text-muted); transition: transform 0.3s; }
-   details[open] summary .arrow { transform: rotate(-180deg); color: var(--color-primary); }
-   
-   /* Efeitos de Hover e Ativo */
-   .nav-group summary:hover, .nav-single a:hover { background: var(--color-bg-app); color: var(--color-primary); }
-   .nav-single a.active { 
-       color: var(--color-primary); 
-       border-left: 4px solid var(--color-primary); 
-       background: #fdf2f8; 
-   }
-   
-   /* Submenus (Links internos) */
-   .nav-group ul { list-style: none; margin: 0.2rem 0 1rem 0; }
-   .nav-group a { 
-       display: block; padding: 0.5rem 1.5rem 0.5rem 3.5rem; /* Recuo para alinhar com o texto de cima */
-       color: var(--color-text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; 
-   }
-   .nav-group a:hover, .nav-group a.active { color: var(--color-primary); font-weight: 600; }
-   
-   .sidebar-footer { padding: 1.5rem; border-top: 1px solid var(--color-bg-app); }
+.sidebar { width: 260px; background: var(--color-sidebar); border-right: 1px solid var(--color-border); display: flex; flex-direction: column; }
+.sidebar-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid var(--color-bg-app); }
+.sidebar-logo { width: 100%; max-width: 180px; }
+
+.sidebar-nav { padding: 1.5rem 0; flex-grow: 1; overflow-y: auto; }
+.nav-single a, .nav-group summary { 
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 1.5rem; font-weight: 600; color: var(--color-text-muted);
+    cursor: pointer; list-style: none; transition: all 0.2s; outline: none; 
+}
+.nav-single a i, .summary-content i { font-size: 1.25rem; margin-right: 0.75rem; color: var(--color-primary); }
+.summary-content { display: flex; align-items: center; }
+
+.nav-group summary::-webkit-details-marker { display: none; }
+.nav-group summary .arrow { font-size: 0.9rem; color: var(--color-text-muted); transition: transform 0.3s; }
+details[open] summary .arrow { transform: rotate(-180deg); color: var(--color-primary); }
+
+.nav-group summary:hover, .nav-single a:hover { background: var(--color-bg-app); color: var(--color-primary); }
+.nav-single a.active { color: var(--color-primary); border-left: 4px solid var(--color-primary); background: #fdf2f8; }
+
+.nav-group ul { list-style: none; margin: 0.2rem 0 1rem 0; }
+.nav-group a { 
+    display: block; padding: 0.5rem 1.5rem 0.5rem 3.5rem; 
+    color: var(--color-text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; 
+}
+.nav-group a:hover, .nav-group a.active { color: var(--color-primary); font-weight: 600; }
+.sidebar-footer { padding: 1.5rem; border-top: 1px solid var(--color-bg-app); }
 
 /* ==========================================
    5. CONTEÚDO PRINCIPAL E DASHBOARD
@@ -133,47 +109,35 @@ select.form-select:focus {
 .topbar { background: var(--color-surface); padding: 1.5rem 2rem; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
 .content-wrapper { padding: 2rem; max-width: 1100px; margin: 0 auto; width: 100%; }
 
-/* Cards do Dashboard */
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
 .kpi-card { background: var(--color-surface); padding: 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-md); border-top: 4px solid var(--color-border); }
 .kpi-card:nth-child(1) { border-top-color: var(--color-success); }
 .kpi-card:nth-child(2) { border-top-color: var(--color-danger); }
 
-/* Card de Lucro com fundo Primary (Gradiente) */
-.kpi-highlight { 
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); 
-  border-top: none; 
-}
-.kpi-highlight h3 { color: rgba(255, 255, 255, 0.85); } 
+.kpi-highlight { background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); border-top: none; }
+.kpi-highlight h3 { color: #FFFFFF !important; text-shadow: 0 1px 2px rgba(0,0,0,0.1); opacity: 0.9; } 
 .kpi-highlight .value { color: #FFFFFF; text-shadow: 0 1px 2px rgba(0,0,0,0.1); } 
 
 .kpi-card h3 { font-size: 0.8rem; color: var(--color-text-muted); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
 .kpi-card .value { font-size: 2rem; }
 
-/* Espaço do Gráfico e Painéis */
 .chart-placeholder { height: 300px; display: flex; align-items: center; justify-content: center; background: var(--color-surface); border: 2px dashed var(--color-border); border-radius: var(--radius-md); }
 .panel { background: var(--color-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--color-border); }
 .panel-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--color-border); }
 .panel-body { padding: 1.5rem; }
 
-/* Formulário em Linha (Relatórios) */
 .form-filtro { display: flex; gap: 1.5rem; flex-wrap: wrap; }
 .form-filtro .input-group { width: auto; flex: 1; min-width: 200px; margin-bottom: 0; }
 
-/* Tabelas (Para a view de relatórios) */
 .table-responsive { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
 .data-table th, .data-table td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--color-border); }
 .data-table th { background: var(--color-bg-app); font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; font-size: 0.8rem; }
 
-/* Corrige os links do Menu Lateral (Remove sublinhado e alinha à esquerda) */
 .nav-single a { text-decoration: none !important; justify-content: flex-start !important; }
 .nav-single a i { margin-right: 0.75rem !important; }
 
-/* Corrige o contraste do título 'Lucro Líquido' no card Magenta */
-.kpi-highlight h3 { color: #FFFFFF !important; text-shadow: 0 1px 2px rgba(0,0,0,0.1); opacity: 0.9; }
-
-/* Janela Modal e Notificações */
+/* Modal e Toasts */
 .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
 .toast { padding: 12px 24px; border-radius: 8px; color: white; display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease-out forwards; }
 .toast-sucesso { background-color: var(--color-success); }
@@ -187,29 +151,36 @@ select.form-select:focus {
 .modal-box { background: white; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
 
 /* ==========================================
-   6. RESPONSIVIDADE PARA CELULAR (NOVO)
+   6. RESPONSIVIDADE PARA CELULAR E MENU GAVETA
    ========================================== */
+#mobile-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 998; }
+.hidden-desktop { display: none !important; }
+
 @media (max-width: 768px) {
     .app-layout { flex-direction: column; }
     
-    /* Menu Lateral vira um menu horizontal no topo para o celular */
-    .sidebar { width: 100%; max-height: 250px; overflow-y: auto; border-right: none; border-bottom: 2px solid var(--color-primary); }
-    .sidebar-header { padding: 1rem; }
-    .sidebar-logo { max-width: 120px; margin: 0 auto; display: block; }
+    /* Mostra o botão de fechar no menu e o botão de abrir na Topbar */
+    .hidden-desktop { display: block !important; }
+    #btn-menu-mobile { display: block !important; }
     
-    /* Topbar centralizada */
-    .topbar { padding: 1rem; flex-direction: column; gap: 0.5rem; text-align: center; }
+    /* O Menu Lateral vira uma "Gaveta" que desliza da esquerda */
+    .sidebar { 
+        position: fixed; top: 0; left: 0; height: 100vh; width: 280px; 
+        z-index: 999; transform: translateX(-100%); transition: transform 0.3s ease; 
+        box-shadow: 4px 0 15px rgba(0,0,0,0.1); border-right: none;
+    }
+    
+    /* Classe que o JS vai adicionar para mostrar o menu */
+    .sidebar.open { transform: translateX(0); }
+    
+    .topbar { padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
     .content-wrapper { padding: 1rem; }
     
-    /* Grids e Painéis ficam um embaixo do outro */
+    /* Empilha os gráficos e formulários para não espremer */
     .kpi-grid { grid-template-columns: 1fr; }
     .charts-grid { flex-direction: column !important; }
     .panel { min-width: 100% !important; }
-    
-    /* Ajusta os formulários para os campos não ficarem espremidos */
     form > div[style*="display: flex"] { flex-direction: column; gap: 0 !important; }
     .input-group { width: 100% !important; margin-bottom: 1rem !important; flex: none !important; }
-    
-    /* Modal de edição menor para a tela */
     .modal-box { padding: 1.5rem; width: 95%; }
 }
