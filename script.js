@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. LOGIN
+    // 1. LOGIN (Cirúrgico: Aceitando Maiúsculas e Minúsculas)
     const formLogin = document.getElementById('form-login');
     const viewLogin = document.getElementById('view-login');
     const viewApp = document.getElementById('view-app');
@@ -8,7 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (formLogin) {
         formLogin.addEventListener('submit', (e) => {
             e.preventDefault(); 
-            if (document.getElementById('login').value === 'admin' && document.getElementById('senha').value === 'admin') {
+            // Atualização de segurança e UX no login
+            const userLogin = document.getElementById('login').value.trim().toLowerCase();
+            const userSenha = document.getElementById('senha').value;
+
+            if (userLogin === 'admin' && userSenha === 'admin') {
                 msgErroLogin.classList.add('hidden'); viewLogin.classList.add('hidden'); viewApp.classList.remove('hidden');
                 carregarPainelFinanceiro(); carregarCategorias(); carregarPacientes(); carregarAgenda();
             } else { msgErroLogin.classList.remove('hidden'); }
@@ -336,7 +340,6 @@ async function carregarPacientes() {
     renderizarTabela('tbody-pacientes', pacs.reverse(), p => `<td>${formatarData(p.Data_Cadastro)}</td><td><strong>${p.Nome_Completo}</strong></td><td>${p.Telefone}</td><td>${p.Email}</td><td class="text-center">${botoesAcao('Pacientes', p.ID)}</td>`);
 }
 
-// AGENDA COM INTELIGÊNCIA DE KPIs MENSAL E AUTOMAÇÃO
 async function carregarAgenda() {
     const agenda = await buscarDados('Agenda');
     
