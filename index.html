@@ -34,8 +34,14 @@
     </main>
 
     <div id="view-app" class="app-layout hidden">
+        
+        <div id="mobile-overlay" class="hidden"></div>
+
         <aside class="sidebar">
-            <header class="sidebar-header"><img src="logo.jpeg" alt="Logo" class="sidebar-logo"></header>
+            <header class="sidebar-header" style="position: relative;">
+                <img src="logo.jpeg" alt="Logo" class="sidebar-logo">
+                <button id="btn-close-menu" class="btn-icon hidden-desktop" style="position: absolute; right: 10px; top: 15px; color: var(--color-primary); background: none; border: none; cursor: pointer;"><i class="ph ph-x" style="font-size: 1.5rem;"></i></button>
+            </header>
             <nav class="sidebar-nav">
                 <div class="nav-single"><a href="#dashboard" class="active"><i class="ph ph-squares-four"></i> Painel Geral</a></div>
                 <div class="nav-single"><a href="#agenda"><i class="ph ph-calendar-blank"></i> Agenda Clínica</a></div>
@@ -53,7 +59,14 @@
         </aside>
         
         <main class="main-content">
-            <header class="topbar"><h2 id="titulo-pagina">Painel Geral</h2><div class="user-profile">Olá, Priscylla</div></header>
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="btn-menu-mobile" class="btn-icon" style="color: var(--color-primary); display: none; background: none; border: none; cursor: pointer;"><i class="ph ph-list" style="font-size: 2rem;"></i></button>
+                    <h2 id="titulo-pagina">Painel Geral</h2>
+                </div>
+                <div class="user-profile">Olá, Priscylla</div>
+            </header>
+            
             <div class="content-wrapper">
                 
                 <div id="tela-dashboard" class="view-section">
