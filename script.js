@@ -1,5 +1,36 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. LOGIN (Cirúrgico: Aceitando Maiúsculas e Minúsculas)
+    
+    // ==========================================
+    // CONTROLE DO MENU MOBILE (GAVETA)
+    // ==========================================
+    const btnMenu = document.getElementById('btn-menu-mobile');
+    const btnCloseMenu = document.getElementById('btn-close-menu');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('mobile-overlay');
+
+    function toggleMenu() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('hidden');
+    }
+
+    if(btnMenu) btnMenu.addEventListener('click', toggleMenu);
+    if(btnCloseMenu) btnCloseMenu.addEventListener('click', toggleMenu);
+    if(overlay) overlay.addEventListener('click', toggleMenu);
+
+    // Fecha o menu automaticamente quando clica em algum link (no celular)
+    document.querySelectorAll('.sidebar-nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            if(window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                if(overlay) overlay.classList.add('hidden');
+            }
+        });
+    });
+
+
+    // ==========================================
+    // 1. LOGIN (Aceitando Maiúsculas e Minúsculas)
+    // ==========================================
     const formLogin = document.getElementById('form-login');
     const viewLogin = document.getElementById('view-login');
     const viewApp = document.getElementById('view-app');
